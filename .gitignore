@@ -10,5 +10,7 @@ composer.phar
 /temp/
 /cache/
 
+.php-cs-fixer.cache
+
 .DS_Store
 Thumbs.db
