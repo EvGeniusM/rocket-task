@@ -11,8 +11,10 @@ use App\Models\Book;
 
 final class BookService
 {
-    public function __construct(private readonly UserService $access = new UserService())
-    {
+    public function __construct(
+        private readonly UserService $access = new UserService(),
+        private readonly SearchService $search = new SearchService(),
+    ) {
     }
 
     public function forUser(int $userId): array
@@ -67,17 +69,7 @@ final class BookService
             throw new ValidationException('Either text or a file is required.');
         }
 
-        $pdo = Database::connection();
-        $stmt = $pdo->prepare(
-            'INSERT INTO ' . Book::TABLE . ' (owner_id, title, content) VALUES (:owner_id, :title, :content)'
-        );
-        $stmt->execute([
-            'owner_id' => $ownerId,
-            'title' => $title,
-            'content' => $content,
-        ]);
-
-        return $this->present($this->fetch((int) $pdo->lastInsertId()));
+        return $this->store($ownerId, $title, $content);
     }
 
     public function update(int $bookId, int $ownerId, ?string $title, ?string $text): array
@@ -135,9 +127,44 @@ final class BookService
         }
     }
 
-    public function createFromExternal(int $ownerId, string $externalId): array
+    public function createFromExternal(int $ownerId, string $externalId, ?string $title, ?string $text): array
     {
-        return [];
+        $externalId = trim($externalId);
+
+        if (!str_contains($externalId, ':')) {
+            throw new ValidationException('external_id must be in "source:id" format.');
+        }
+
+        [$source, $sourceId] = explode(':', $externalId, 2);
+
+        if ($sourceId === '') {
+            throw new ValidationException('external_id is missing the source identifier.');
+        }
+
+        $title = $title !== null ? trim($title) : null;
+        $content = $text;
+
+        // Google exposes a per-volume detail endpoint, so we can resolve the book
+        // authoritatively by id. Other sources rely on the client-supplied metadata.
+        if ($source === 'google') {
+            $volume = $this->search->resolveGoogleVolume($sourceId);
+
+            if ($volume !== null) {
+                $title = $title !== null && $title !== '' ? $title : ($volume['title'] ?? null);
+                $content ??= $volume['description'];
+            }
+        }
+
+        if ($title === null || $title === '') {
+            throw new ValidationException('Could not resolve a title; provide "title".');
+        }
+
+        // External entries may carry no body text; keep the row meaningful.
+        if ($content === null || $content === '') {
+            $content = $title;
+        }
+
+        return $this->store($ownerId, $title, $content);
     }
 
     private function extractText(array $file): string
@@ -191,6 +218,21 @@ final class BookService
         $book = $stmt->fetch();
 
         return $book === false ? null : $book;
+    }
+
+    private function store(int $ownerId, string $title, string $content): array
+    {
+        $pdo = Database::connection();
+        $stmt = $pdo->prepare(
+            'INSERT INTO ' . Book::TABLE . ' (owner_id, title, content) VALUES (:owner_id, :title, :content)'
+        );
+        $stmt->execute([
+            'owner_id' => $ownerId,
+            'title' => $title,
+            'content' => $content,
+        ]);
+
+        return $this->present($this->fetch((int) $pdo->lastInsertId()));
     }
 
     private function present(array $book): array

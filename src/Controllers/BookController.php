@@ -111,6 +111,21 @@ final class BookController extends Controller
 
     public function storeExternal(): void
     {
-        Response::notImplemented('POST /books/external');
+        $body = $this->body();
+
+        try {
+            $book = $this->service->createFromExternal(
+                Auth::id(),
+                (string) ($body['external_id'] ?? ''),
+                array_key_exists('title', $body) ? (string) $body['title'] : null,
+                array_key_exists('text', $body) ? (string) $body['text'] : null,
+            );
+        } catch (ValidationException $e) {
+            Response::error($e->getMessage(), 422);
+
+            return;
+        }
+
+        Response::json($book, 201);
     }
 }
