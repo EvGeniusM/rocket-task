@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Core\Auth;
 use App\Core\Controller;
+use App\Core\Request;
 use App\Core\Response;
+use App\Exceptions\NotFoundException;
+use App\Exceptions\ValidationException;
 use App\Services\BookService;
 
 final class BookController extends Controller
@@ -19,32 +23,90 @@ final class BookController extends Controller
 
     public function index(): void
     {
-        Response::notImplemented('GET /books');
+        Response::json(['books' => $this->service->forUser(Auth::id())]);
     }
 
     public function store(): void
     {
-        Response::notImplemented('POST /books');
+        $body = $this->body();
+
+        try {
+            $book = $this->service->create(
+                Auth::id(),
+                (string) ($body['title'] ?? ''),
+                array_key_exists('text', $body) ? (string) $body['text'] : null,
+                Request::file('file'),
+            );
+        } catch (ValidationException $e) {
+            Response::error($e->getMessage(), 422);
+
+            return;
+        }
+
+        Response::json($book, 201);
     }
 
     public function show(string $id): void
     {
-        Response::notImplemented("GET /books/{$id}");
+        $book = $this->service->find((int) $id, Auth::id());
+
+        if ($book === null) {
+            Response::error('Book not found.', 404);
+
+            return;
+        }
+
+        Response::json($book);
     }
 
     public function update(string $id): void
     {
-        Response::notImplemented("PUT /books/{$id}");
+        $body = $this->body();
+
+        try {
+            $book = $this->service->update(
+                (int) $id,
+                Auth::id(),
+                array_key_exists('title', $body) ? (string) $body['title'] : null,
+                array_key_exists('text', $body) ? (string) $body['text'] : null,
+            );
+        } catch (NotFoundException $e) {
+            Response::error($e->getMessage(), 404);
+
+            return;
+        } catch (ValidationException $e) {
+            Response::error($e->getMessage(), 422);
+
+            return;
+        }
+
+        Response::json($book);
     }
 
     public function destroy(string $id): void
     {
-        Response::notImplemented("DELETE /books/{$id}");
+        try {
+            $this->service->softDelete((int) $id, Auth::id());
+        } catch (NotFoundException $e) {
+            Response::error($e->getMessage(), 404);
+
+            return;
+        }
+
+        Response::json(['message' => 'Book deleted.']);
     }
 
     public function restore(string $id): void
     {
-        Response::notImplemented("POST /books/{$id}/restore");
+        try {
+            $this->service->restore((int) $id, Auth::id());
+        } catch (NotFoundException $e) {
+            Response::error($e->getMessage(), 404);
+
+            return;
+        }
+
+        Response::json(['message' => 'Book restored.']);
     }
 
     public function storeExternal(): void
