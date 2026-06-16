@@ -8,15 +8,18 @@ use App\Core\Auth;
 use App\Core\Controller;
 use App\Core\Response;
 use App\Exceptions\ValidationException;
+use App\Services\BookService;
 use App\Services\UserService;
 
 final class UserController extends Controller
 {
     private UserService $service;
+    private BookService $books;
 
     public function __construct()
     {
         $this->service = new UserService();
+        $this->books = new BookService();
     }
 
     public function index(): void
@@ -41,6 +44,15 @@ final class UserController extends Controller
 
     public function books(string $id): void
     {
-        Response::notImplemented("GET /users/{$id}/books");
+        $ownerId = (int) $id;
+        $requesterId = Auth::id();
+
+        if ($ownerId !== $requesterId && !$this->service->hasAccess($ownerId, $requesterId)) {
+            Response::error('You do not have access to this library.', 403);
+
+            return;
+        }
+
+        Response::json(['books' => $this->books->forUser($ownerId)]);
     }
 }
