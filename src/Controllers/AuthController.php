@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Response;
+use App\Exceptions\ValidationException;
 use App\Services\AuthService;
 
 final class AuthController extends Controller
@@ -19,11 +20,38 @@ final class AuthController extends Controller
 
     public function register(): void
     {
-        Response::notImplemented('POST /register');
+        $body = $this->body();
+
+        try {
+            $result = $this->service->register(
+                (string) ($body['login'] ?? ''),
+                (string) ($body['password'] ?? ''),
+                (string) ($body['password_confirmation'] ?? ''),
+            );
+        } catch (ValidationException $e) {
+            Response::error($e->getMessage(), 422);
+
+            return;
+        }
+
+        Response::json($result, 201);
     }
 
     public function login(): void
     {
-        Response::notImplemented('POST /login');
+        $body = $this->body();
+
+        try {
+            $result = $this->service->login(
+                (string) ($body['login'] ?? ''),
+                (string) ($body['password'] ?? ''),
+            );
+        } catch (ValidationException $e) {
+            Response::error($e->getMessage(), 401);
+
+            return;
+        }
+
+        Response::json($result);
     }
 }
