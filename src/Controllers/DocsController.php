@@ -42,12 +42,17 @@ HTML;
     public function spec(): void
     {
         $openapi = Generator::scan([dirname(__DIR__)], ['logger' => new NullLogger()]);
-        $data = json_decode($openapi->toJson(), true);
-        // swagger-php omits 'paths' when no routes are annotated; ensure it is always present.
+        $data    = json_decode($openapi->toJson(), true);
+
+        // swagger-php omits 'paths' when no routes are annotated; ensure it is always present as an object.
         if (!isset($data['paths'])) {
             $data['paths'] = (object) [];
         }
+
         header('Content-Type: application/json');
-        echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        echo json_encode(
+            $data,
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT,
+        );
     }
 }
