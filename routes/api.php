@@ -9,6 +9,9 @@ use Bramus\Router\Router;
 
 $router->setNamespace('\App\Controllers');
 
+$router->get('/docs', 'DocsController@ui');
+$router->get('/docs/openapi.json', 'DocsController@spec');
+
 $guard = [AuthMiddleware::class, 'handle'];
 $router->before('GET|POST|PUT|DELETE', '/users.*', $guard);
 $router->before('GET|POST|PUT|DELETE', '/books.*', $guard);

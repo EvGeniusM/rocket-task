@@ -27,11 +27,12 @@ $serverStrings = array_filter($_SERVER, fn ($v) => is_string($v));
 $env = array_merge($serverStrings, ['APP_ENV' => 'testing']);
 
 $cmd = sprintf(
-    '%s -S %s:%d -t %s',
+    '%s -S %s:%d -t %s %s',
     PHP_BINARY,
     TEST_SERVER_HOST,
     TEST_SERVER_PORT,
-    escapeshellarg($root . '/public')
+    escapeshellarg($root . '/public'),
+    escapeshellarg($root . '/public/router.php')
 );
 
 $server = proc_open(
