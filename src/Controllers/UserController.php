@@ -102,7 +102,27 @@ final class UserController extends Controller
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
         ],
         responses: [
-            new OA\Response(response: 200, description: 'Book list'),
+            new OA\Response(
+                response: 200,
+                description: 'Book list',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'books',
+                            type: 'array',
+                            items: new OA\Items(
+                                properties: [
+                                    new OA\Property(property: 'id', type: 'integer', example: 1),
+                                    new OA\Property(property: 'title', type: 'string', example: 'Dune'),
+                                    new OA\Property(property: 'link', type: 'string', example: 'http://localhost:8000/books/1'),
+                                    new OA\Property(property: 'created_at', type: 'string', example: '2024-01-01 00:00:00'),
+                                    new OA\Property(property: 'updated_at', type: 'string', example: '2024-01-01 00:00:00'),
+                                ],
+                            ),
+                        ),
+                    ],
+                ),
+            ),
             new OA\Response(response: 401, description: 'Unauthenticated'),
             new OA\Response(response: 403, description: 'Access not granted'),
         ],

@@ -30,7 +30,7 @@ final class BookCrudTest extends FeatureTestCase
         $this->assertSame('Dune II', $update['json']['title'] ?? null);
 
         $delete = $this->request('DELETE', "/books/{$id}", null, $token);
-        $this->assertSame(200, $delete['status']);
+        $this->assertSame(204, $delete['status']);
 
         $this->assertSame(404, $this->request('GET', "/books/{$id}", null, $token)['status']);
 

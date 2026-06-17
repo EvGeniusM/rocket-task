@@ -57,6 +57,9 @@ final class SharedAccessTest extends FeatureTestCase
         $res = $this->request('GET', "/users/{$aliceId}/books", null, $aliceToken);
         $this->assertSame(200, $res['status']);
         $this->assertCount(1, $res['json']['books'] ?? []);
+
+        $book = $res['json']['books'][0];
+        $this->assertSame(TEST_SERVER_URL . '/books/' . $book['id'], $book['link']);
     }
 
     public function testGrantAccessRejectsSelf(): void

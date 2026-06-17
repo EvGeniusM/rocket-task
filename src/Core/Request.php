@@ -35,6 +35,15 @@ final class Request
         return $_FILES[$key] ?? null;
     }
 
+    public static function baseUrl(): string
+    {
+        $https = $_SERVER['HTTPS'] ?? '';
+        $scheme = ($https !== '' && $https !== 'off') ? 'https' : 'http';
+        $host = (string) ($_SERVER['HTTP_HOST'] ?? 'localhost');
+
+        return $scheme . '://' . $host;
+    }
+
     public static function bearerToken(): ?string
     {
         $header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';

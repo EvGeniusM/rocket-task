@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Core\Database;
+use App\Core\Request;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
 use App\Models\Book;
@@ -27,10 +28,13 @@ final class BookService
         );
         $stmt->execute(['owner_id' => $userId]);
 
+        $base = Request::baseUrl();
+
         return array_map(
             static fn (array $row): array => [
                 'id' => (int) $row['id'],
                 'title' => $row['title'],
+                'link' => $base . '/books/' . (int) $row['id'],
                 'created_at' => $row['created_at'],
                 'updated_at' => $row['updated_at'],
             ],

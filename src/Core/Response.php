@@ -24,6 +24,11 @@ final class Response
         self::json(['status' => 'error', 'message' => $message], $status);
     }
 
+    public static function noContent(): void
+    {
+        http_response_code(204);
+    }
+
     public static function notImplemented(string $endpoint): void
     {
         self::json(['status' => 'not_implemented', 'endpoint' => $endpoint], 501);
