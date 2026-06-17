@@ -31,8 +31,11 @@ final class App
     {
         $root = dirname(__DIR__, 2);
 
-        if (file_exists($root . '/.env')) {
-            Dotenv::createImmutable($root)->load();
+        $appEnv = $_SERVER['APP_ENV'] ?? getenv('APP_ENV') ?: null;
+        $file   = $appEnv === 'testing' ? '.env.testing' : '.env';
+
+        if (file_exists($root . '/' . $file)) {
+            Dotenv::createImmutable($root, $file)->load();
         }
     }
 

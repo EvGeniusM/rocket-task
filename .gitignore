@@ -12,5 +12,8 @@ composer.phar
 
 .php-cs-fixer.cache
 
+.env.testing
+.phpunit.cache
+
 .DS_Store
 Thumbs.db

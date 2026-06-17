@@ -173,22 +173,16 @@ final class BookService
             throw new ValidationException('File upload failed.');
         }
 
-        $extension = strtolower(pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION));
-
-        if ($extension !== 'txt') {
-            throw new ValidationException('Only .txt files are supported.');
-        }
-
         $tmp = (string) ($file['tmp_name'] ?? '');
 
-        if (!is_uploaded_file($tmp)) {
-            throw new ValidationException('Invalid uploaded file.');
+        if ($tmp === '' || !is_readable($tmp)) {
+            throw new ValidationException('Uploaded file is not readable.');
         }
 
         $content = file_get_contents($tmp);
 
-        if ($content === false) {
-            throw new ValidationException('Could not read the uploaded file.');
+        if ($content === false || trim($content) === '') {
+            throw new ValidationException('Uploaded file is empty or unreadable.');
         }
 
         return $content;
