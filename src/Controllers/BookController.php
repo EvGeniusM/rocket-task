@@ -65,13 +65,26 @@ final class BookController extends Controller
         tags: ['Books'],
         requestBody: new OA\RequestBody(
             required: true,
-            content: new OA\JsonContent(
-                required: ['title'],
-                properties: [
-                    new OA\Property(property: 'title', type: 'string', example: 'Dune'),
-                    new OA\Property(property: 'text', type: 'string', example: 'Spice must flow.'),
-                ],
-            ),
+            description: 'Provide a title plus either inline text (JSON) or an uploaded .txt file (multipart). One of text/file is required.',
+            content: [
+                new OA\JsonContent(
+                    required: ['title', 'text'],
+                    properties: [
+                        new OA\Property(property: 'title', type: 'string', example: 'Dune'),
+                        new OA\Property(property: 'text', type: 'string', example: 'Spice must flow.'),
+                    ],
+                ),
+                new OA\MediaType(
+                    mediaType: 'multipart/form-data',
+                    schema: new OA\Schema(
+                        required: ['title', 'file'],
+                        properties: [
+                            new OA\Property(property: 'title', type: 'string', example: 'Dune'),
+                            new OA\Property(property: 'file', type: 'string', format: 'binary', description: 'A .txt file whose contents become the book body'),
+                        ],
+                    ),
+                ),
+            ],
         ),
         responses: [
             new OA\Response(
